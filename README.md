@@ -1,2 +1,2 @@
-# golang-tutorials
-All course files for the Net Ninja Go tutorial series.
+# test golang api
+By maciej the magician
