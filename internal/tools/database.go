@@ -6,7 +6,7 @@ import (
 
 // Database collections
 type LoginDetails struct {
-	AuthToken string
+	Password string
 	Username  string
 }
 type CoinDetails struct {
@@ -22,7 +22,7 @@ type DatabaseInterface interface {
 
 func NewDatabase() (*DatabaseInterface, error) {
 
-	var database DatabaseInterface = &mockDB{}
+	var database DatabaseInterface = &dB{}
 
 	var err error = database.SetupDatabase()
 	if err != nil {

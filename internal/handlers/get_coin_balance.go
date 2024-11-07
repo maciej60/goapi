@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
+	"github.com/gorilla/schema"
 	"github.com/maciej60/goapi/api"
 	"github.com/maciej60/goapi/internal/tools"
 	log "github.com/sirupsen/logrus"
-	"github.com/gorilla/schema"
 )
 
 func GetCoinBalance(w http.ResponseWriter, r *http.Request) {
@@ -49,5 +50,8 @@ func GetCoinBalance(w http.ResponseWriter, r *http.Request) {
 		log.Error(err)
 		api.InternalErrorHandler(w)
 		return
+	}else{
+		log.Info("Successfully fetched coin balance for user: ", params.Username)
+		fmt.Println(response)
 	}
 }
