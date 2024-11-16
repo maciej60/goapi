@@ -15,43 +15,35 @@ func init() {
         log.Fatal("Error loading .env file")
     }
 }
-var ErrUnAuthorizedUser = fmt.Errorf("invalid username or token/password")
-var ErrUnAuthorizedApiKey error = fmt.Errorf("invalid Api key or secret")
+var ErrUnAuthorizedUser error = fmt.Errorf("invalid user or token")
+var ErrUnAuthorizedApiKey error = fmt.Errorf("invalid Api key")
 
 func Authorization(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-        var username string = r.URL.Query().Get("username")
-        var password = r.Header.Get("Authorization")
+        // var appId string = r.URL.Query().Get("appId")
+        var token = r.Header.Get("Authorization")
         var apikey = r.Header.Get("apikey")
         var err error
-
-        if username == "" {
+        if token == "" {
             api.RequestErrorHandler(w, ErrUnAuthorizedUser)
             return
         }
-
         if apikey == "" || apikey != os.Getenv("APIKEY") {
             api.RequestErrorHandler(w, ErrUnAuthorizedApiKey)
             return
         }
-
         var database *tools.DatabaseInterface
         database, err = tools.NewDatabase()
         if err != nil {
             api.InternalErrorHandler(w)
             return
         }
-
-        loginDetails := (*database).GetUserLoginDetails(username)
-
-        if (loginDetails == nil || (password != (*loginDetails).Password)) {
+        authDetails := (*database).GetAuth(token)
+        if (authDetails == nil) {
             log.Error(ErrUnAuthorizedUser)
             api.RequestErrorHandler(w, ErrUnAuthorizedUser)
             return
         }
-
         next.ServeHTTP(w, r)
-
     })
 }

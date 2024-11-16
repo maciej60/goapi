@@ -1,12 +1,14 @@
 package tools
 
 import (
-	"time"
 	"database/sql"
-    "fmt"
-    "log"
-    "os"
-    "github.com/go-sql-driver/mysql"
+	"encoding/json"
+	"fmt"
+	"log"
+	"os"
+	"time"
+
+	"github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 )
 
@@ -41,26 +43,43 @@ func init() {
     fmt.Println("Database Connected!")
 }
 
-func (d *dB) GetUserLoginDetails(username string) *LoginDetails {
-    time.Sleep(time.Second * 1)
-
-    var clientData LoginDetails
-    query := fmt.Sprintf("SELECT password FROM users WHERE username = '%s'", username)
+func (d *dB) GetAuth(token string) *Auth {
+    type Username struct {
+        Username string `json:"username"`
+    }
+    var data = []byte(token)
+    var uname Username
+    var clientData Auth
+    json.Unmarshal(data, &uname)
+    query := fmt.Sprintf("SELECT id,name,password FROM users WHERE username = '%s'", uname.Username)
     row := db.QueryRow(query)
-    err := row.Scan(&clientData.Password)
+    err := row.Scan(&clientData.UserId, &clientData.Name, &clientData.Password)
     if err == sql.ErrNoRows {
         return nil
     } else if err!= nil {
         log.Fatal(err)
     }
+    clientData.Username = uname.Username
+    return &clientData
+}
 
+func (d *dB) GetUserLoginDetails(username string) *LoginDetails {
+    time.Sleep(time.Second * 1)
+    var clientData LoginDetails
+    query := fmt.Sprintf("SELECT id,name,password,status,created_at FROM users WHERE username = '%s'", username)
+    row := db.QueryRow(query)
+    err := row.Scan(&clientData.UserId, &clientData.Name, &clientData.Password, &clientData.Status, &clientData.CreatedAt)
+    if err == sql.ErrNoRows {
+        return nil
+    } else if err!= nil {
+        log.Fatal(err)
+    }
     clientData.Username = username
     return &clientData
 }
 
 func (d *dB) GetUserCoins(username string) *CoinDetails {
     time.Sleep(time.Second * 1)
-
     var clientData CoinDetails
     query := fmt.Sprintf("SELECT coin_balance FROM user_coins WHERE username = '%s'", username)
     row := db.QueryRow(query)
@@ -70,7 +89,6 @@ func (d *dB) GetUserCoins(username string) *CoinDetails {
     } else if err!= nil {
         log.Fatal(err)
     }
-
     clientData.Username = username
     return &clientData
 }
